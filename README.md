@@ -243,7 +243,7 @@ The application provides a RESTful API:
 ## 📝 Project Structure
 
 ```
-Mini/
+AI-ENABLED-AUTOMATED-EDA-TOOL-WITH-INTELLIGENT-CHATBOT-FOR-DATA-INSIGHTS-LLM-BI/
 ├── main.py                 # FastAPI backend application
 ├── index.html              # Frontend interface
 ├── clean_and_EDA_generate.py  # Data cleaning and EDA generation
