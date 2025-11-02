@@ -44,14 +44,14 @@ An intelligent Exploratory Data Analysis (EDA) platform that automates data anal
 ## 🏗️ Architecture
 
 ### Backend
-- **FastAPI**: High-performance async API framework
+- **FastAPI**: High-performance async API framework (runs on port 8000)
 - **Pandas**: Data manipulation and analysis
 - **NumPy**: Numerical computations
 - **Plotly**: Interactive visualizations
 - **Google Generative AI (Gemini)**: LLM integration for chat and query generation
 
 ### Frontend
-- **HTML/CSS/JavaScript**: Modern single-page application
+- **HTML/CSS/JavaScript**: Modern single-page application (served on port 3000)
 - **Tailwind CSS**: Utility-first styling with glassmorphism effects
 - **Plotly.js**: Client-side interactive chart rendering
 
@@ -69,36 +69,105 @@ An intelligent Exploratory Data Analysis (EDA) platform that automates data anal
    cd Mini
    ```
 
-2. **Install dependencies**
+2. **Create a virtual environment**
+   
+   On **Windows**:
+   ```bash
+   python -m venv venv
+   ```
+   
+   On **macOS/Linux**:
+   ```bash
+   python3 -m venv venv
+   ```
+
+3. **Activate the virtual environment**
+   
+   On **Windows** (PowerShell):
+   ```bash
+   venv\Scripts\Activate.ps1
+   ```
+   
+   On **Windows** (Command Prompt):
+   ```bash
+   venv\Scripts\activate.bat
+   ```
+   
+   On **macOS/Linux**:
+   ```bash
+   source venv/bin/activate
+   ```
+
+   You should see `(venv)` at the beginning of your terminal prompt.
+
+4. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure Gemini API**
+5. **Configure Gemini API**
    
    Create a `.env` file in the root directory:
    ```env
    GEMINI_API_KEY=your_api_key_here
    ```
    
-   You can also set it as an environment variable:
+   Alternatively, set it as an environment variable:
+   
+   On **Windows** (PowerShell):
+   ```powershell
+   $env:GEMINI_API_KEY="your_api_key_here"
+   ```
+   
+   On **Windows** (Command Prompt):
+   ```cmd
+   set GEMINI_API_KEY=your_api_key_here
+   ```
+   
+   On **macOS/Linux**:
    ```bash
    export GEMINI_API_KEY=your_api_key_here
    ```
 
-4. **Run the application**
-   ```bash
-   python main.py
-   ```
-   
-   Or using uvicorn directly:
-   ```bash
-   uvicorn main:app --reload
-   ```
+## 🚀 Running the Application
 
-5. **Access the application**
-   - Backend API: `http://localhost:8000`
-   - Frontend: Open `index.html` in your browser, or serve it via a web server
+The application requires two separate terminals - one for the backend and one for the frontend.
+
+### Terminal 1 - Backend Server (Port 8000)
+
+Make sure your virtual environment is activated, then run:
+
+```bash
+python main.py
+```
+
+You should see output indicating the FastAPI server is running:
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000
+```
+
+The backend API will be available at `http://localhost:8000`
+
+### Terminal 2 - Frontend Server (Port 3000)
+
+In a **new terminal window** (with virtual environment activated), navigate to the project directory and run:
+
+```bash
+python -m http.server 3000
+```
+
+You should see output like:
+```
+Serving HTTP on 0.0.0.0 port 3000 (http://0.0.0.0:3000/) ...
+```
+
+### Access the Application
+
+1. Open your web browser
+2. Navigate to `http://localhost:3000`
+3. The frontend will automatically communicate with the backend API at `http://localhost:8000`
+
+**Note**: Make sure both servers are running simultaneously for the application to work properly.
 
 ## 📖 Usage
 
@@ -182,8 +251,25 @@ Mini/
 ├── utils.py                # Gemini LLM integration utilities
 ├── smart_query.py          # Natural language query processing
 ├── requirements.txt        # Python dependencies
+├── venv/                   # Virtual environment (created after setup)
 └── .env                    # Environment variables (create this)
 ```
+
+## 🛠️ Troubleshooting
+
+### Backend not starting
+- Ensure port 8000 is not already in use
+- Check that all dependencies are installed: `pip install -r requirements.txt`
+- Verify your Gemini API key is set correctly
+
+### Frontend not connecting to backend
+- Ensure both servers are running
+- Check that the backend is accessible at `http://localhost:8000`
+- Verify CORS settings if accessing from a different origin
+
+### Virtual environment issues
+- Make sure you've activated the virtual environment (should see `(venv)` in terminal)
+- Recreate virtual environment if needed: `deactivate` → delete `venv/` → recreate and reinstall
 
 ## 🚀 Future Enhancements
 
