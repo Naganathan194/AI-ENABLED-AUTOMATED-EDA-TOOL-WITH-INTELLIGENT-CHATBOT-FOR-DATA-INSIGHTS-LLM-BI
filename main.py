@@ -142,6 +142,38 @@ def is_categorical_column(df: pd.DataFrame, col: str) -> bool:
         logger.warning(f"Error checking categorical for {col}: {str(e)}")
         return False
 
+def convert_to_json_serializable(obj):
+    """Convert pandas Timestamps and other non-JSON-serializable objects to strings"""
+    # Handle arrays first before checking for NaN
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, (list, tuple)):
+        return [convert_to_json_serializable(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: convert_to_json_serializable(value) for key, value in obj.items()}
+    # Handle specific pandas/numpy types
+    elif isinstance(obj, pd.Timestamp):
+        return obj.isoformat()
+    elif isinstance(obj, pd.Timedelta):
+        return str(obj)
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, (np.integer, np.floating)):
+        return float(obj) if isinstance(obj, np.floating) else int(obj)
+    # Check for NaN values only for scalars (not arrays/lists/dicts)
+    # pd.isna can return arrays for array inputs, so we need to handle it carefully
+    if not isinstance(obj, (dict, list, tuple, np.ndarray, pd.Series)):
+        try:
+            # Only check for NaN on scalar values
+            na_result = pd.isna(obj)
+            # If pd.isna returns a scalar boolean (not an array), use it
+            if isinstance(na_result, (bool, np.bool_)) and na_result:
+                return None
+        except (ValueError, TypeError):
+            # pd.isna couldn't determine or returned an array - skip NaN check
+            pass
+    return obj
+
 def convert_plotly_figure_to_dict(fig):
     """Convert Plotly figure to dict, ensuring proper JSON serialization"""
     try:
@@ -484,6 +516,8 @@ async def get_categorical_analysis(dataset_id: str):
                     continue
                 
                 value_counts = series_clean.value_counts()
+                # Filter out "nan" strings (these are actually missing values converted to strings)
+                value_counts = value_counts[value_counts.index.astype(str).str.lower() != 'nan']
                 total_unique = len(value_counts)
                 top_30 = value_counts.head(30)
                 
@@ -526,11 +560,12 @@ async def get_categorical_analysis(dataset_id: str):
                 })
                 
                 # Pie chart for small categories
-                if len(top_30) <= 15 and len(top_30) > 1:
+                # Use x_vals and y_vals which already include "No Value" if present
+                if len(x_vals) <= 15 and len(x_vals) > 1:
                     fig_pie = go.Figure()
                     fig_pie.add_trace(go.Pie(
-                        labels=top_30.index.tolist(),
-                        values=top_30.values.tolist(),
+                        labels=x_vals,
+                        values=y_vals,
                         hole=0.4,
                         textinfo='label+percent',
                         hovertemplate='<b>%{label}</b><br>Count: %{value:,}<br>%{percent}<extra></extra>'
@@ -1213,6 +1248,8 @@ async def chat_with_ai(request: ChatRequest):
         
         # Get sample data for context
         sample_data = df.head(5).to_dict('records')
+        # Convert Timestamps and other non-JSON-serializable objects to strings
+        sample_data = convert_to_json_serializable(sample_data)
         
         prompt = f"""You are a data analyst assistant. Answer questions about the dataset conversationally and accurately.
 
@@ -1220,7 +1257,7 @@ Dataset: {filename}
 Rows: {len(df):,}, Columns: {len(df.columns)}
 
 Column Information:
-{json.dumps(eda.get('columns', {}), indent=2)}
+{json.dumps(convert_to_json_serializable(eda.get('columns', {})), indent=2)}
 
 Sample Data (first 5 rows):
 {json.dumps(sample_data, indent=2)}
@@ -1255,7 +1292,7 @@ async def query_dataset(request: QueryRequest):
         prompt = f"""Convert this natural language query into pandas operations.
 
 Dataset Columns: {list(df.columns)}
-Column Info: {json.dumps(eda.get('columns', {}), indent=2)}
+Column Info: {json.dumps(convert_to_json_serializable(eda.get('columns', {})), indent=2)}
 
 Query: {request.query}
 

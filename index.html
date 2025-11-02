@@ -741,7 +741,7 @@
                         <p class="text-gray-400 text-lg">Key findings and recommendations for your data</p>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">`;
-
+                
                 data.insights.slice(0, 2).forEach((section, idx) => {
                     const icon = sectionIcons[section.title] || '📌';
                     html += `
@@ -792,8 +792,8 @@
                                     <span class="text-purple-400 font-bold mt-1">▸</span>
                                     <p class="text-gray-200 leading-relaxed">${item}</p>
                                 </div>`;
-                        });
-                        
+                    });
+                    
                         html += `</div></div>`;
                 });
                 
@@ -1615,7 +1615,7 @@
 ║                                                               ║
 ║  python main.py                                               ║
 ║                                                               ║
-║  Or: uvicorn main:app --reload                               ║
+║  Or: uvicorn main:app --reload                                ║
 ║                                                               ║
 ║  Server should be running on: ${API_BASE.padEnd(43)}║
 ╚══════════════════════════════════════════════════════════════╝
