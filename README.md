@@ -65,7 +65,7 @@ An intelligent Exploratory Data Analysis (EDA) platform that automates data anal
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Naganathan194/AI-ENABLED-AUTOMATED-EDA-TOOL-WITH-INTELLIGENT-CHATBOT-FOR-DATA-INSIGHTS-LLM-BI
+   git clone https://github.com/Naganathan194/AI-ENABLED-AUTOMATED-EDA-TOOL-WITH-INTELLIGENT-CHATBOT-FOR-DATA-INSIGHTS-LLM-BI.git
    cd AI-ENABLED-AUTOMATED-EDA-TOOL-WITH-INTELLIGENT-CHATBOT-FOR-DATA-INSIGHTS-LLM-BI
    ```
 
