@@ -282,7 +282,7 @@ Mini/
 
 ## 📄 License
 
-[Specify your license here]
+MIT License 2025
 
 ## 🤝 Contributing
 
@@ -290,7 +290,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📧 Contact
 
-[Your contact information]
+
+- 📧 Email: [naganathan@gmail.com](mailto:naganathan@gmail.com)  
+- 🐙 GitHub: [Naganathan194](https://github.com/Naganathan194)  
 
 ---
 
