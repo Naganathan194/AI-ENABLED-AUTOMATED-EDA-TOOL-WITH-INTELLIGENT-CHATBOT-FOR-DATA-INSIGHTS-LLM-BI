@@ -30,6 +30,7 @@
         .pagination-button:hover:not(:disabled) { background: rgba(102, 126, 234, 0.3); }
         .pagination-button:disabled { opacity: 0.3; cursor: not-allowed; }
         .pagination-button.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .faq-suggestion { min-width: 180px; white-space: normal; box-shadow: 0 2px 8px 0 rgba(102,126,234,0.10); cursor:pointer; font-size:15px; } .faq-suggestion:hover { background: linear-gradient(135deg,#764ba2 0%,#667eea 100%) !important; }
     </style>
 </head>
 <body class="text-white">
@@ -103,7 +104,6 @@
                     <button onclick="switchTab('correlations')" id="tab-correlations" class="px-6 py-3 rounded-lg font-semibold whitespace-nowrap hover:bg-white/5">📈 Correlations</button>
                     <button onclick="switchTab('outliers')" id="tab-outliers" class="px-6 py-3 rounded-lg font-semibold whitespace-nowrap hover:bg-white/5">⚠️ Outliers</button>
                     <button onclick="switchTab('timeseries')" id="tab-timeseries" class="px-6 py-3 rounded-lg font-semibold whitespace-nowrap hover:bg-white/5">📅 Time Series</button>
-                    <button onclick="switchTab('contour')" id="tab-contour" class="px-6 py-3 rounded-lg font-semibold whitespace-nowrap hover:bg-white/5">🗺️ Contour</button>
                     <button onclick="switchTab('insights')" id="tab-insights" class="px-6 py-3 rounded-lg font-semibold whitespace-nowrap hover:bg-white/5">💡 AI Insights</button>
                     <button onclick="switchTab('chat')" id="tab-chat" class="px-6 py-3 rounded-lg font-semibold whitespace-nowrap hover:bg-white/5">🤖 Ask AI</button>
                     <button onclick="switchTab('explorer')" id="tab-explorer" class="px-6 py-3 rounded-lg font-semibold whitespace-nowrap hover:bg-white/5">🔍 Explorer</button>
@@ -160,6 +160,7 @@
         let currentDatasetId = null;
         let allDatasets = [];
         let chatHistory = [];
+        let chatMessages = []; // Store chat messages for session persistence
         let explorerPagination = { page: 1, pageSize: 50, totalPages: 1 };
         let queryPagination = { page: 1, pageSize: 50, totalPages: 1 };
 
@@ -197,6 +198,7 @@
         async function switchDataset(datasetId) {
             currentDatasetId = datasetId;
             chatHistory = [];
+            chatMessages = []; // Clear chat messages when switching dataset
             explorerPagination = { page: 1, pageSize: 50, totalPages: 1 };
             queryPagination = { page: 1, pageSize: 50, totalPages: 1 };
             
@@ -280,15 +282,15 @@
 
                 const data = await response.json();
                 
-                await loadDatasets();
+                    await loadDatasets();
                 currentDatasetId = data.dataset_id;
                 await switchDataset(data.dataset_id);
-                
-                document.getElementById('welcomeScreen').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                
-                closeUploadModal();
-                switchTab('overview');
+                    
+                    document.getElementById('welcomeScreen').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    
+                    closeUploadModal();
+                    switchTab('overview');
             } catch (error) {
                 console.error('Upload error:', error);
                 let errorMsg = error.message || 'Failed to upload file';
@@ -324,7 +326,6 @@
                 case 'correlations': loadCorrelations(); break;
                 case 'outliers': loadOutliers(); break;
                 case 'timeseries': loadTimeSeries(); break;
-                case 'contour': loadContour(); break;
                 case 'insights': loadInsights(); break;
                 case 'chat': loadChat(); break;
                 case 'explorer': loadExplorer(); break;
@@ -365,15 +366,15 @@
                                     <tbody>`;
                 
                 if (cols.length > 0) {
-                    cols.forEach(([col, details]) => {
-                        html += `
-                            <tr class="border-b border-white/5 hover:bg-white/5">
-                                <td class="py-3 px-4 font-semibold">${col}</td>
-                                <td class="py-3 px-4">${details.dtype || 'N/A'}</td>
+                cols.forEach(([col, details]) => {
+                    html += `
+                        <tr class="border-b border-white/5 hover:bg-white/5">
+                            <td class="py-3 px-4 font-semibold">${col}</td>
+                            <td class="py-3 px-4">${details.dtype || 'N/A'}</td>
                                 <td class="py-3 px-4">${details.missing_count || 0} (${(details.missing_percent || 0).toFixed(1)}%)</td>
-                                <td class="py-3 px-4">${details.unique_count || 'N/A'}</td>
-                            </tr>`;
-                    });
+                            <td class="py-3 px-4">${details.unique_count || 'N/A'}</td>
+                        </tr>`;
+                });
                 } else {
                     html += `<tr><td colspan="4" class="py-4 text-center text-gray-400">No column information available</td></tr>`;
                 }
@@ -386,22 +387,22 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead><tr class="border-b border-white/10">`;
-                    
+                
                     Object.keys(preview[0]).forEach(key => {
                         html += `<th class="text-left py-2 px-3 font-semibold">${key}</th>`;
-                    });
-                    
-                    html += `</tr></thead><tbody>`;
-                    
+                });
+                
+                html += `</tr></thead><tbody>`;
+                
                     preview.slice(0, 10).forEach(row => {
-                        html += '<tr class="border-b border-white/5 hover:bg-white/5">';
-                        Object.values(row).forEach(val => {
+                    html += '<tr class="border-b border-white/5 hover:bg-white/5">';
+                    Object.values(row).forEach(val => {
                             const displayVal = val !== null && val !== undefined ? String(val) : '-';
                             html += `<td class="py-2 px-3">${displayVal.length > 100 ? displayVal.substring(0, 100) + '...' : displayVal}</td>`;
-                        });
-                        html += '</tr>';
                     });
-                    
+                    html += '</tr>';
+                });
+                
                     html += `</tbody></table></div></div>`;
                 }
                 
@@ -730,7 +731,7 @@
                     'Insights': '✨',
                     'Summary': '📋'
                 };
-
+                
                 let html = `
                     <div class="mb-8">
                         <h2 class="text-4xl font-bold mb-3 gradient-text flex items-center space-x-3">
@@ -750,8 +751,8 @@
                                     ${icon}
                                 </div>
                                 <h3 class="text-2xl font-bold text-purple-300">
-                                    ${section.title}
-                                </h3>
+                                ${section.title}
+                            </h3>
                             </div>
                             <div class="space-y-4">`;
                     
@@ -784,9 +785,9 @@
                                     </h3>
                                 </div>
                                 <div class="space-y-3">`;
-                        
-                        section.items.forEach(item => {
-                            html += `
+                    
+                    section.items.forEach(item => {
+                        html += `
                                 <div class="flex items-start space-x-3 pl-4 border-l-2 border-purple-500/30">
                                     <span class="text-purple-400 font-bold mt-1">▸</span>
                                     <p class="text-gray-200 leading-relaxed">${item}</p>
@@ -794,9 +795,9 @@
                         });
                         
                         html += `</div></div>`;
-                    });
-                    
-                    html += `</div>`;
+                });
+                
+                html += `</div>`;
                 }
                 
                 content.innerHTML = html;
@@ -1014,107 +1015,165 @@
             }
         }
 
-        async function loadContour() {
-            try {
-                if (!currentDatasetId) {
-                    document.getElementById('tabContent').innerHTML = '<p class="text-red-400">Please select a dataset first</p>';
-                    return;
-                }
-                
-                const response = await fetch(`${API_BASE}/api/analyze/${currentDatasetId}/contour`);
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    if (response.status === 400) {
-                        document.getElementById('tabContent').innerHTML = `
-                            <div class="text-center py-12">
-                                <div class="text-6xl mb-4">🗺️</div>
-                                <h2 class="text-2xl font-bold mb-2 gradient-text">Contour Analysis Not Available</h2>
-                                <p class="text-gray-400">${errorText || 'Need at least 2 numeric columns for contour plots'}</p>
-                            </div>
-                        `;
-                        return;
+
+        function formatChatResponse(text) {
+            if (!text) return '';
+            
+            // Replace <br> tags with newlines first
+            text = text.replace(/<br\s*\/?>/gi, '\n');
+            
+            // Split by lines
+            const lines = text.split('\n');
+            let formattedLines = [];
+            let inSection = false;
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) {
+                    if (formattedLines.length > 0 && !formattedLines[formattedLines.length - 1].endsWith('</div>')) {
+                        formattedLines.push('');
                     }
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    continue;
                 }
                 
-                const data = await response.json();
+                // Check for headers BEFORE escaping HTML (to preserve & for matching)
+                let isMajorHeader = false;
+                let isSubHeader = false;
                 
-                if (!data.visualizations || data.visualizations.length === 0) {
-                    document.getElementById('tabContent').innerHTML = `
-                        <div class="text-center py-12">
-                            <div class="text-6xl mb-4">🗺️</div>
-                            <h2 class="text-2xl font-bold mb-2 gradient-text">No Contour Plots Available</h2>
-                            <p class="text-gray-400">No valid numeric column pairs found for contour visualization</p>
-                        </div>
-                    `;
-                    return;
+                // Detect major section headers (longer titles, ending with colon, may have &)
+                // Pattern: Starts with capital, has text, ends with colon, optionally followed by blank line
+                if (line.match(/^[A-Z][^:]{10,60}:\s*$/) && (i < lines.length - 1 && lines[i + 1].trim() === '' || i === 0)) {
+                    isMajorHeader = true;
                 }
                 
-                let html = `<h2 class="text-3xl font-bold mb-6 gradient-text">Contour Plots</h2>
-                           <p class="text-gray-300 mb-6">2D density distribution of numeric column pairs</p>`;
+                // Detect subsection headers (shorter, single word or two words before colon, may include &)
+                // Match patterns like "Age:", "Gender:", "Smoking Status:", etc.
+                if (!isMajorHeader && line.match(/^[A-Z][A-Za-z\s&]+:\s*$/) && line.length < 40) {
+                    isSubHeader = true;
+                }
                 
-                data.visualizations.forEach((viz, idx) => {
-                    const uniqueId = `plot-contour-${viz.column1}-${viz.column2}-${idx}`;
-                    html += `<div class="mb-8 glass-card p-6 rounded-xl">
-                        <h3 class="text-xl font-semibold mb-4 text-purple-300">${viz.column1} vs ${viz.column2}</h3>
-                        <div id="${uniqueId}" style="min-height: 500px;"></div>
-                    </div>`;
-                });
+                // Escape HTML after checking headers
+                const originalLine = line;
+                line = line.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 
-                document.getElementById('tabContent').innerHTML = html;
+                if (isMajorHeader) {
+                    const headerText = originalLine.replace(':', '');
+                    // Escape header text separately
+                    const escapedHeader = headerText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    formattedLines.push(`<div class="mt-6 mb-4"><div class="flex items-center space-x-3 mb-3"><div class="w-1 h-8 bg-gradient-to-b from-purple-500 to-pink-500 rounded"></div><h3 class="text-xl font-bold text-purple-300">${escapedHeader}</h3></div></div>`);
+                    inSection = true;
+                    continue;
+                }
                 
-                setTimeout(() => {
-                    if (typeof Plotly === 'undefined') {
-                        console.error('Plotly library not loaded!');
-                        return;
+                if (isSubHeader) {
+                    const subHeaderText = originalLine.replace(':', '');
+                    // Escape subheader text separately
+                    const escapedSubHeader = subHeaderText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    formattedLines.push(`<div class="mt-4 mb-2 ml-4"><h4 class="text-base font-semibold text-purple-200 flex items-center space-x-2"><span class="text-lg">▸</span><span>${escapedSubHeader}</span></h4></div>`);
+                    continue;
+                }
+                
+                // Detect bullet points (starts with - or •)
+                if (line.match(/^[-•]\s+/)) {
+                    const bulletText = line.replace(/^[-•]\s+/, '');
+                    // Highlight numbers in bullet text
+                    const bulletWithHighlights = bulletText.replace(/(\d+\.?\d*)/g, '<span class="font-bold text-yellow-300">$1</span>');
+                    formattedLines.push(`<div class="flex items-start space-x-3 py-2 ml-6"><span class="text-purple-400 mt-1 text-lg">•</span><span class="flex-1 text-gray-200">${bulletWithHighlights}</span></div>`);
+                    continue;
+                }
+                
+                // Detect numbered lists
+                if (line.match(/^\d+[.)]\s+/)) {
+                    const match = line.match(/^(\d+)[.)]\s+(.+)$/);
+                    if (match) {
+                        const num = match[1];
+                        const content = match[2];
+                        const contentWithHighlights = content.replace(/(\d+\.?\d*)/g, '<span class="font-bold text-yellow-300">$1</span>');
+                        formattedLines.push(`<div class="flex items-start space-x-3 py-2 ml-6"><span class="text-purple-400 font-semibold w-8">${num}.</span><span class="flex-1 text-gray-200">${contentWithHighlights}</span></div>`);
                     }
-                    
-                    data.visualizations.forEach((viz, idx) => {
-                        const uniqueId = `plot-contour-${viz.column1}-${viz.column2}-${idx}`;
-                        const element = document.getElementById(uniqueId);
-                        
-                        if (!element) {
-                            console.error(`Element ${uniqueId} not found in DOM`);
-                            return;
-                        }
-                        
-                        try {
-                            if (!viz.figure || !viz.figure.data || !viz.figure.layout) {
-                                console.error(`Invalid figure structure for ${uniqueId}:`, viz);
-                                element.innerHTML = '<p class="text-red-400">Invalid visualization data</p>';
-                                return;
-                            }
-                            
-                            Plotly.newPlot(uniqueId, viz.figure.data, viz.figure.layout, {
-                                responsive: true,
-                                displayModeBar: true
-                            });
-                        } catch (plotError) {
-                            console.error(`Plot error for ${uniqueId}:`, plotError);
-                            element.innerHTML = `<p class="text-red-400">Failed to render visualization: ${plotError.message}</p>`;
-                        }
-                    });
-                }, 200);
-            } catch (error) {
-                console.error('Contour error:', error);
-                document.getElementById('tabContent').innerHTML = `
-                    <div class="text-center py-12">
-                        <p class="text-red-400 text-lg mb-2">Failed to load contour analysis</p>
-                        <p class="text-gray-400 text-sm">${error.message}</p>
-                    </div>
-                `;
+                    continue;
+                }
+                
+                // Regular paragraph text
+                // Highlight numbers and key phrases
+                let processedLine = line;
+                
+                // Highlight numbers
+                processedLine = processedLine.replace(/(\d+\.?\d*)/g, '<span class="font-bold text-yellow-300">$1</span>');
+                
+                // Highlight common statistical terms
+                processedLine = processedLine.replace(/\b(average|mean|median|approximately|about|around|total|count|cases?)\b/gi, '<span class="font-semibold text-purple-200">$1</span>');
+                
+                formattedLines.push(`<p class="mb-3 text-gray-200 leading-relaxed ml-4">${processedLine}</p>`);
             }
+            
+            let html = formattedLines.join('\n');
+            
+            // Wrap sections in cards for better visual organization
+            const sections = html.split(/(<div class="mt-6 mb-4"><div[^>]*><h3[^>]*>.*?<\/h3><\/div><\/div>)/);
+            let finalHtml = '';
+            
+            for (let i = 0; i < sections.length; i++) {
+                let section = sections[i].trim();
+                if (!section) continue;
+                
+                // If it's a major header
+                if (section.includes('<h3 class="text-xl')) {
+                    finalHtml += section;
+                } else if (section.includes('<h4') || section.includes('<div class="flex items-start') || section.includes('<p class="mb-3')) {
+                    // Content section - wrap in a card for visual separation
+                    finalHtml += `<div class="bg-white/5 rounded-xl p-4 mb-4 border border-white/10">${section}</div>`;
+                } else {
+                    finalHtml += section;
+                }
+            }
+            
+            // If no sections were detected, wrap everything in a card
+            if (!finalHtml || finalHtml === html) {
+                finalHtml = `<div class="bg-white/5 rounded-xl p-4 mb-4">${html}</div>`;
+            }
+            
+            // Add a quick summary box at the end if there are many metrics
+            const metrics = html.match(/<span class="font-bold text-yellow-300">(\d+\.?\d*)<\/span>/g);
+            if (metrics && metrics.length > 3) {
+                finalHtml += '<div class="mt-6 pt-4 border-t-2 border-purple-500/30"><div class="bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-purple-500/20 rounded-xl p-5 border border-purple-500/30"><div class="flex items-start space-x-3"><span class="text-2xl">💡</span><div><h4 class="font-bold text-purple-300 mb-2">Quick Reference</h4><p class="text-sm text-gray-300 leading-relaxed">Key metrics are highlighted in <span class="font-bold text-yellow-300">yellow</span> throughout this analysis. Use the section headers above to quickly navigate to specific topics.</p></div></div></div></div>';
+            }
+            
+            return finalHtml || html;
         }
 
         function loadChat() {
             const content = document.getElementById('tabContent');
+            // Define sample FAQ questions
+            const suggestedQuestions = [
+                "What are the key trends in this dataset?",
+                "Do you notice any significant outliers?",
+                "How do the variables correlate?",
+                "What time-based patterns are present?",
+                "Any suggestions for further analysis?"
+            ];
+
+            let faqHtml = `
+            <div class="mb-6">
+                <div class="font-bold mb-2 text-gray-200 text-lg flex items-center gap-2">
+                    <span class="text-2xl">💬</span>
+                    Frequently Asked Questions
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    ${suggestedQuestions.map(q => `
+                        <button class="faq-suggestion gradient-button px-4 py-2 rounded-lg text-white font-semibold"
+                            type="button"
+                            onclick="handleFaqClick('${q.replace(/'/g, "\\'")}')"
+                        >${q}</button>`).join('')}
+                </div>
+            </div>`;
+
             content.innerHTML = `
                 <h2 class="text-3xl font-bold mb-6 gradient-text">Ask AI About Your Data</h2>
+                ${faqHtml}
                 <div class="space-y-6">
                     <div id="chatMessages" class="glass-card p-6 rounded-xl h-96 overflow-y-auto space-y-4">
-                        <div class="text-center text-gray-400 py-8">
-                            👋 Hi! Ask me anything about your dataset. I can help you understand patterns, relationships, and insights.
-                        </div>
+                        ${chatMessages.length === 0 ? '<div class="text-center text-gray-400 py-8">👋 Hi! Ask me anything about your dataset. I can help you understand patterns, relationships, and insights.</div>' : chatMessages.join('')}
                     </div>
                     <div class="flex space-x-4">
                         <input 
@@ -1129,6 +1188,31 @@
                         </button>
                     </div>
                 </div>`;
+            
+            // Scroll to bottom after loading messages
+            setTimeout(() => {
+                const messagesContainer = document.getElementById('chatMessages');
+                if (messagesContainer) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }, 100);
+        }
+
+        // Handles clicking on the FAQ suggestion questions
+        function handleFaqClick(question) {
+            const input = document.getElementById('chatInput');
+            if (!input) return;
+            input.value = question;
+            sendMessage();
+        }
+
+        // Add a little extra style for FAQ buttons
+        // (inject once per load)
+        if (!window.__faqInjected) {
+            const style = document.createElement('style');
+            style.innerHTML = `.faq-suggestion { min-width: 180px; white-space: normal; box-shadow: 0 2px 8px 0 rgba(102,126,234,0.10); cursor:pointer; font-size:15px; } .faq-suggestion:hover { background: linear-gradient(135deg,#764ba2 0%,#667eea 100%) !important; }`;
+            document.head.appendChild(style);
+            window.__faqInjected = true;
         }
 
         async function sendMessage() {
@@ -1147,25 +1231,32 @@
                 originalPlaceholder.remove();
             }
             
-            messagesContainer.innerHTML += `
+            // Store user message in chatMessages array
+            const userMessageHtml = `
                 <div class="chat-bubble flex justify-end mb-4">
                     <div class="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 rounded-2xl max-w-md shadow-lg">
-                        ${message}
+                        ${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
                     </div>
                 </div>`;
+            
+            chatMessages.push(userMessageHtml);
+            messagesContainer.innerHTML = chatMessages.join('');
             
             input.value = '';
             input.disabled = true;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
             const loadingId = 'loading-' + Date.now();
-            messagesContainer.innerHTML += `
+            const loadingHtml = `
                 <div class="chat-bubble flex justify-start mb-4" id="${loadingId}">
                     <div class="bg-white/10 px-6 py-3 rounded-2xl flex items-center space-x-2">
                         <div class="loader" style="width: 20px; height: 20px; border-width: 2px;"></div>
                         <span class="text-gray-400">Thinking...</span>
                     </div>
                 </div>`;
+            
+            chatMessages.push(loadingHtml);
+            messagesContainer.innerHTML = chatMessages.join('');
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
             try {
@@ -1179,8 +1270,9 @@
                     })
                 });
 
-                const loadingEl = document.getElementById(loadingId);
-                if (loadingEl) loadingEl.remove();
+                // Remove loading message
+                chatMessages = chatMessages.filter(msg => !msg.includes(loadingId));
+                messagesContainer.innerHTML = chatMessages.join('');
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
@@ -1188,27 +1280,41 @@
 
                 const data = await response.json();
                 
-                messagesContainer.innerHTML += `
+                // Format the response to be more attractive and structured
+                const formattedResponse = formatChatResponse(data.response);
+                
+                // Store AI response in chatMessages array
+                const aiMessageHtml = `
                     <div class="chat-bubble flex justify-start mb-4">
-                        <div class="bg-white/10 px-6 py-4 rounded-2xl max-w-md shadow-lg">
-                            ${data.response.replace(/\n/g, '<br>')}
+                        <div class="bg-white/10 px-6 py-5 rounded-2xl max-w-3xl shadow-lg">
+                            ${formattedResponse}
                         </div>
                     </div>`;
                 
+                chatMessages.push(aiMessageHtml);
+                messagesContainer.innerHTML = chatMessages.join('');
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // Also update chatHistory for backend context
                 chatHistory.push({ user: message, ai: data.response });
             } catch (error) {
-                const loadingEl = document.getElementById(loadingId);
-                if (loadingEl) loadingEl.remove();
+                // Remove loading message
+                chatMessages = chatMessages.filter(msg => !msg.includes(loadingId));
+                messagesContainer.innerHTML = chatMessages.join('');
 
                 console.error('Chat error:', error);
-                messagesContainer.innerHTML += `
+                
+                // Store error message
+                const errorMessageHtml = `
                     <div class="chat-bubble flex justify-start mb-4">
                         <div class="bg-red-500/20 border border-red-500/30 px-6 py-3 rounded-2xl max-w-md">
                             <p class="font-semibold text-red-300 mb-1">Sorry, I encountered an error</p>
                             <p class="text-red-400 text-sm">${error.message || 'Please try again'}</p>
                         </div>
                     </div>`;
+                
+                chatMessages.push(errorMessageHtml);
+                messagesContainer.innerHTML = chatMessages.join('');
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             } finally {
                 input.disabled = false;
@@ -1250,7 +1356,7 @@
 
         async function executeQuery(page = 1) {
             const query = document.getElementById('explorerQuery').value.trim();
-            
+
             const resultsDiv = document.getElementById('explorerResults');
             resultsDiv.innerHTML = '<div class="flex justify-center py-8"><div class="loader"></div></div>';
 
@@ -1282,7 +1388,7 @@
                             <div>
                                 <h3 class="text-xl font-bold">Results: ${data.rows.toLocaleString()} row${data.rows !== 1 ? 's' : ''} found</h3>
                                 ${data.total_rows ? `<p class="text-sm text-gray-400">From ${data.total_rows.toLocaleString()} total rows in dataset</p>` : ''}
-                            </div>
+                        </div>
                             <div class="text-sm text-gray-400 max-w-md truncate" title="${data.pandas_query || data.sql_query || 'Filter applied'}">${data.pandas_query || data.sql_query || 'Filter applied'}</div>
                         </div>`;
                     
